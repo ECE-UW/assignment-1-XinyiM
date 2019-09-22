@@ -9,7 +9,6 @@ import re
 import copy
 
 
-
 def generateVertices(v_list):
     '''
 
@@ -33,16 +32,13 @@ def distance(va, vb):
 
 def input_process(command):
     if command[0] == 'a':
-        print("Add a street!...")
         G.add_st(command)
     elif command[0] == 'c':
-        print("Change a street!...")
         G.change_st(command)
     elif command[0] == 'r':
-        print("Remove a street!...")
         G.remove_st(command)
     elif command[0] == 'g':
-        print("Generate a graph!...")
+        # print("Generate a graph!...")
         G.generate_graph()
         #G.show()
     else:
@@ -50,16 +46,13 @@ def input_process(command):
 
 
 vIDs = {}
+
+
 def distributeVertexIDs(vertex):
     if vIDs.has_key(vertex):
-        print("【Already has】%s 's id is : %s\n" % (str(vertex), str(vertex.id)))
         vertex.id = vIDs[vertex]
     else:
-        # print(type(len(vIDs.keys()) + 1))
-        # print(type(vertex))
         vertex.id = len(vIDs.keys()) + 1
-        # vertex._id = len(vIDs.keys()) + 1
-        print("%s 's id is: %s" % (str(vertex), str(vertex.id)))
         vIDs[vertex] = vertex.id
 
 
@@ -96,6 +89,7 @@ def street_name(streetname):
     for i in str(streetname):
         if not (i.isalpha()) and not (i.isspace()):
             print("Error: Street name must be alphabetical! ")
+            break
 
 
 class Vertex:
@@ -104,12 +98,6 @@ class Vertex:
         self.y = y
         self.id = -1
         self.isIntersection = False
-
-    # def setid(self, value):
-        # self.id = value
-
-    # def intersection(self):
-        # self.isIntersection = True
 
     def __eq__(self, other):
         return self.x == other.x and self.y == other.y
@@ -147,7 +135,6 @@ class Segment:
     def __str__(self):
         return '< %s,%s >' % (self.v1.id, self.v2.id)
 
-
     def endofsegment(self, vx):
         return self.v1 == vx or self.v2 == vx
 
@@ -172,27 +159,21 @@ class Street:
         else:
             print("Error: a street must have 2 vertices or more!")
 
-    def show_st(self):
-        print(self.name+": ")
-        print('Vertices = {')
-        for v in self.vertices_list:
-            print(v)
-        print('}')
-        print('Segments = {')
-        for s in self.segment_list:
-            print(s)
-        print('}\n')
 
     def insertPointintoSegment(self, segment, vp):
         # 1.判断vp是不是segment的End_vertex
         if segment.endofsegment(vp):
+            if segment.v1 == vp:
+                segment.v1.isIntersection = True
+            if segment.v2 == vp:
+                segment.v2.isIntersection = True
             return None
+        # insert函数只用在插入交点时，所以vp必须是交点，判断vp是否是segment的端点，
+        # 如果是，则将端点的isIntersection值设为True
 
         # 2.把原有的segment分为两个
         seg_a = Segment(segment.v1, vp)
         seg_b = Segment(vp, segment.v2)
-        # print(seg_a)
-        # print(seg_b)
         new_segs = []
         new_vertices = []
         for i in range(len(self.segment_list)):
@@ -235,7 +216,6 @@ class Graph:
 
     def add_vertex(self, vertex):
         if not self.vertices_f.has_key(vertex):
-            print("%s not been stored before." % str(vertex))
             distributeVertexIDs(vertex)
             # print(vertex.id)
             self.vertices_f[vertex] = vertex
@@ -250,13 +230,13 @@ class Graph:
         if matching:
             street = str(matching.group(1))
             street_name(street)
+            print(str(street))
             if self.Streets.has_key(street):
+                print("Error: the street name does exist!")
                 return
-            vertexList = matching.group(2)
-            vertexList = generateVertices(vertexList)
+            vertexList = generateVertices(matching.group(2))
+            # vertexList = generateVertices(vertexList)
             self.Streets[street] = Street(street, vertexList)
-            # print("添加的street为：")
-            # self.Streets[street].show_st()
         else:
             print("Error: wrong input! ")
 
@@ -270,7 +250,7 @@ class Graph:
                 vertexList = matching.group(2)
                 vertexList = generateVertices(vertexList)
                 self.Streets[street] = Street(street, vertexList)
-                print("change %s successfully!" % street)
+                # print("change %s successfully!" % street)
             else:
                 print ("Error: this street doesn't exist!")
         else:
@@ -284,7 +264,6 @@ class Graph:
             street_name(street)
             if self.Streets.has_key(street):
                 del self.Streets[street]
-                print("delete %s Successfully!" % street)
             else:
                 print("Error: This street doesn't exist!")
         else:
@@ -305,7 +284,6 @@ class Graph:
                             insert point into seg1,st1
                             insert point into seg2,st2
         '''
-        print("现有的街道为：%s 条" % str(len(streetsName)))
 
         for i in range(len(streetsName) - 1):
             # 遍历所有街道
@@ -321,7 +299,7 @@ class Graph:
                         # Error: s2 in segs2
                         intersection = find_intersection(s1, s2)
                         if intersection:
-                            print("交点存在，为 %s " % str(intersection))
+                            # print("交点存在，为 %s " % str(intersection))
                             intersection.isIntersection = True # mark as intersection
                             st1.insertPointintoSegment(s1, intersection)
                             st2.insertPointintoSegment(s2, intersection)
@@ -350,12 +328,10 @@ class Graph:
         # 遍历第一个到最后一个street
         for i in range(len(streetsName)):
             st = new_G.Streets[streetsName[i]] # 遍历st上的每一个vertex
-            print ("当前街道 %s 的所有vertex " % (streetsName[i]))
-            # print st.vertices_list
             for j in range(len(st.vertices_list)):
                 # print(st.vertices_list[j].intersection)
                 if st.vertices_list[j].isIntersection:
-                    print("%s is intersection" % st.vertices_list[j])
+                    # print("%s is intersection" % st.vertices_list[j])
                     new_G.add_vertex(st.vertices_list[j])
                     if j - 1 >= 0:
                         new_G.add_vertex(st.vertices_list[j - 1])
@@ -363,7 +339,7 @@ class Graph:
                         edge = Segment(new_G.vertices_f[st.vertices_list[j - 1]], new_G.vertices_f[st.vertices_list[j]])
                         # vertices_f是一个字典，用一个key，由于遍历的是st.vertices_list 所以传入的vertex都要是vertices_list中的j-1和j
                         # Segment(Vertex1,Vertex2) 传入两个Vertex 第一个
-                        print(edge)
+                        # print(edge)
                         new_G.add_edge(edge)
                     if j + 1 < len(st.vertices_list):
                         # 这里是小于，不是小于等于
@@ -371,26 +347,34 @@ class Graph:
                         new_G.add_vertex(st.vertices_list[j + 1])
                         # 错误示范：edge = Segment(st.vertices_list[j], st.vertices_list[j + 1])
                         edge = Segment(new_G.vertices_f[st.vertices_list[j]], new_G.vertices_f[st.vertices_list[j + 1]])
-                        print (edge)
+                        # print (edge)
                         new_G.add_edge(edge)
         print("V = {")
         for v in new_G.vertices_f:
             print(v)
         print("}")
         print("E = { ")
+        count = 0
         for e in new_G.edges:
-            print(str(e))
-        print("}")
-
+            count += 1
+            if count < len(new_G.edges):
+                print(str(e) + ',')
+            else:
+                print(str(e))
+        print('}')
 
 G = Graph()
 
+def main():
+    while True:
+        try:
+            args = raw_input()
+            input_process(args)
+        except EOFError:
+            sys.exit(0)
 
-print ("Please enter a command...")
 
-while True:
-    try:
-        command = raw_input()
-        input_process(command)
-    except EOFError:
-        exit()
+if __name__ == '__main__':
+    main()
+
+
