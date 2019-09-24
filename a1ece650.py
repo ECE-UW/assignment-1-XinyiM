@@ -230,7 +230,7 @@ class Graph:
         if matching:
             street = str(matching.group(1))
             street_name(street)
-            print(str(street))
+            # print(str(street))
             if self.Streets.has_key(street):
                 print("Error: the street name does exist!")
                 return
