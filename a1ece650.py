@@ -73,13 +73,29 @@ def find_intersection(seg1, seg2):
         b2 = seg2.v2.x - seg2.v1.x
         c2 = seg2.v1.x * seg2.v2.y - seg2.v2.x * seg2.v1.y
         D = a1 * b2 - a2 * b1
+        # print("D is： %d" % D)
         if D == 0:
+            '''
+            a3 = seg1.v1.y - seg2.v2.y
+            b3 = seg2.v2.x - seg1.v1.x
+            c3 = seg1.v1.x * seg2.v2.y - seg2.v2.x * seg2.v2.y
+            a4 = seg2.v1.y - seg1.v2.y
+            b4 = seg1.v2.x - seg2.v1.x
+            c3 = seg2.v1.x * seg2.v1.y - seg1.v2.x * seg1.v2.y
+            D2 = a3 * b4 - a4 * b3
+            if D2 == 0:
+                # print("D2 is： %d" % D2)
+                return "two intersections"
+            else:
+                print("D2 is： %d" % D2)
+            '''
             return None
         else:
             inx = (b1 * c2 - b2 * c1) / D
             iny = (a2 * c1 - a1 * c2) / D
         intersection = Vertex(inx, iny)
         if seg1.liesinthesegment(intersection) and seg2.liesinthesegment(intersection):
+            # print(intersection)
             return intersection
         else:
             return None
@@ -94,8 +110,8 @@ def street_name(streetname):
 
 class Vertex:
     def __init__(self, x, y):
-        self.x = x
-        self.y = y
+        self.x = float(x)
+        self.y = float(y)
         self.id = -1
         self.isIntersection = False
 
@@ -103,7 +119,7 @@ class Vertex:
         return self.x == other.x and self.y == other.y
 
     def __str__(self):
-        return '%d:   [%.1f, %.1f]' % (self.id, self.x, self.y)
+        return '  %s:  (%.2f,%.2f)' % (self.id, self.x, self.y)
 
     def __hash__(self):
         return ('x:%s,y:%s' % (self.x, self.y)).__hash__()
@@ -133,7 +149,7 @@ class Segment:
         return self.__str__().__hash__()
 
     def __str__(self):
-        return '< %s,%s >' % (self.v1.id, self.v2.id)
+        return '  <%s,%s>' % (self.v1.id, self.v2.id)
 
     def endofsegment(self, vx):
         return self.v1 == vx or self.v2 == vx
@@ -144,6 +160,7 @@ class Segment:
         d3 = distance(self.v1, self.v2)
         # print("d1 : %s\nd2 : %s\nd3 : %s" % (d1, d2, d3))
         return d3 >= d1 and d3 >= d2
+
 
 
 class Street:
@@ -225,10 +242,10 @@ class Graph:
             self.edges[edge] = edge
 
     def add_st(self, command):
-        pattern = r'a \"(.+?)\"(( ?\(\-?\d+,\-?\d+\))+)\s*$'
+        pattern = r'a\s+\"(.+?)\"(( ?\(\-?\d+,\-?\d+\))+)\s*$'
         matching = re.match(pattern, command)
         if matching:
-            street = str(matching.group(1))
+            street = str(matching.group(1).upper())
             street_name(street)
             # print(str(street))
             if self.Streets.has_key(street):
@@ -241,10 +258,10 @@ class Graph:
             print("Error: wrong input! ")
 
     def change_st(self, command):
-        pattern = r'c \"(.+?)\"(( ?\(\-?\d+,\-?\d+\))+)\s*$'
+        pattern = r'c\s+\"(.+?)\"(( ?\(\-?\d+,\-?\d+\))+)\s*$'
         matching = re.match(pattern, command)
         if matching:
-            street = str(matching.group(1))
+            street = str(matching.group(1).upper())
             street_name(street)
             if self.Streets.has_key(street):
                 vertexList = matching.group(2)
@@ -260,7 +277,7 @@ class Graph:
         pattern = r'r \"(.+?)\"'
         matching = re.match(pattern, command)
         if matching:
-            street = str(matching.group(1))
+            street = str(matching.group(1).upper())
             street_name(street)
             if self.Streets.has_key(street):
                 del self.Streets[street]
@@ -284,7 +301,6 @@ class Graph:
                             insert point into seg1,st1
                             insert point into seg2,st2
         '''
-
         for i in range(len(streetsName) - 1):
             # 遍历所有街道
             for j in range(i + 1, len(streetsName)):
@@ -300,13 +316,12 @@ class Graph:
                         intersection = find_intersection(s1, s2)
                         if intersection:
                             # print("交点存在，为 %s " % str(intersection))
-                            intersection.isIntersection = True # mark as intersection
+                            intersection.isIntersection = True  # mark as intersection
                             st1.insertPointintoSegment(s1, intersection)
                             st2.insertPointintoSegment(s2, intersection)
                             # st1，st2中的segment要实时更新
                             new_G.Streets[streetsName[i]] = st1
                             new_G.Streets[streetsName[j]] = st2
-
 
         # generate edges: segments including at least one intersection
         # generate vertices (distribute IDs for the vertices) :
@@ -363,7 +378,9 @@ class Graph:
                 print(str(e))
         print('}')
 
+
 G = Graph()
+
 
 def main():
     while True:
